@@ -2128,7 +2128,12 @@ class Format:
         if len(img.shape) < 3:
             img = img[..., None]
         img = img.transpose(2, 0, 1)
-        img = np.ascontiguousarray(img[::-1] if random.uniform(0, 1) > self.bgr and img.shape[0] == 3 else img)
+        if random.uniform(0, 1) > self.bgr:
+            if img.shape[0] == 3:
+                img = img[::-1]
+            elif img.shape[0] == 6:
+                img = img[[2, 1, 0, 5, 4, 3]]
+        img = np.ascontiguousarray(img)
         img = torch.from_numpy(img)
         return img
 

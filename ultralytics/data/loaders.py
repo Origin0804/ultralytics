@@ -445,6 +445,15 @@ class LoadImagesAndVideos:
                 # Handle image files
                 self.mode = "image"
                 im0 = imread(path, flags=self.cv2_flag)  # BGR
+                # Dual-stream multimodal patch: Attempt to load paired thermal image
+                f_thermal = str(path).replace("images", "images_thermal")
+                im_thermal = imread(f_thermal, flags=self.cv2_flag)
+                if im_thermal is not None:
+                    # Concatenate along channel dimension to create a 6-channel image
+                    im0 = np.concatenate([im0, im_thermal], axis=-1)
+                else:
+                    # Fallback to replicating the RGB image if thermal is missing
+                    im0 = np.concatenate([im0, im0], axis=-1)
                 if im0 is None:
                     LOGGER.warning(f"Image Read Error {path}")
                 else:

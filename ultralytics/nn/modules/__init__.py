@@ -75,6 +75,7 @@ from .conv import (
     LightConv,
     RepConv,
     SpatialAttention,
+    SplitChannels,
 )
 from .head import (
     OBB,
@@ -178,6 +179,7 @@ __all__ = (
     "Segment",
     "Segment26",
     "SpatialAttention",
+    "SplitChannels",
     "TorchVision",
     "TransformerBlock",
     "TransformerEncoderLayer",

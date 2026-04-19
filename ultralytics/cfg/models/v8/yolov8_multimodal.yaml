@@ -1,0 +1,63 @@
+# YOLOv8_multimodal backbone
+nc: 80 # number of classes
+ch: 6 # 6 channels for RGB + Thermal
+scales:
+  n: [0.33, 0.25, 1024]
+backbone:
+  - [-1, 1, nn.Identity, []] # 0: 6-channel input identity
+  
+  # --- RGB Backbone ---
+  - [0, 1, SplitChannels, [3, 0, 3]]  # 1: RGB
+  - [-1, 1, Conv, [64, 3, 2]]         # 2-P1/2
+  - [-1, 1, Conv, [128, 3, 2]]        # 3-P2/4
+  - [-1, 3, C2f, [128, True]]         # 4
+  - [-1, 1, Conv, [256, 3, 2]]        # 5-P3/8
+  - [-1, 6, C2f, [256, True]]         # 6
+  - [-1, 1, Conv, [512, 3, 2]]        # 7-P4/16
+  - [-1, 6, C2f, [512, True]]         # 8
+  - [-1, 1, Conv, [1024, 3, 2]]       # 9-P5/32
+  - [-1, 3, C2f, [1024, True]]        # 10
+  - [-1, 1, SPPF, [1024, 5]]          # 11
+  
+  # --- Thermal Backbone ---
+  - [0, 1, SplitChannels, [3, 3, 6]]  # 12: Thermal
+  - [-1, 1, Conv, [64, 3, 2]]         # 13-P1/2
+  - [-1, 1, Conv, [128, 3, 2]]        # 14-P2/4
+  - [-1, 3, C2f, [128, True]]         # 15
+  - [-1, 1, Conv, [256, 3, 2]]        # 16-P3/8
+  - [-1, 6, C2f, [256, True]]         # 17
+  - [-1, 1, Conv, [512, 3, 2]]        # 18-P4/16
+  - [-1, 6, C2f, [512, True]]         # 19
+  - [-1, 1, Conv, [1024, 3, 2]]       # 20-P5/32
+  - [-1, 3, C2f, [1024, True]]        # 21
+  - [-1, 1, SPPF, [1024, 5]]          # 22
+  
+  # --- Feature Fusion ---
+  - [[6, 17], 1, Concat, [1]]         # 23: fuse P3
+  - [-1, 1, Conv, [256, 1, 1]]        # 24: reduce P3 channels
+  
+  - [[8, 19], 1, Concat, [1]]         # 25: fuse P4
+  - [-1, 1, Conv, [512, 1, 1]]        # 26: reduce P4 channels
+  
+  - [[11, 22], 1, Concat, [1]]        # 27: fuse P5
+  - [-1, 1, Conv, [1024, 1, 1]]       # 28: reduce P5 channels
+
+# YOLOv8.0n head
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 29
+  - [[-1, 26], 1, Concat, [1]] # 30: cat fused P4
+  - [-1, 3, C2f, [512]] # 31
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 32
+  - [[-1, 24], 1, Concat, [1]] # 33: cat fused P3
+  - [-1, 3, C2f, [256]] # 34 (P3/8-small)
+
+  - [-1, 1, Conv, [256, 3, 2]] # 35
+  - [[-1, 31], 1, Concat, [1]] # 36: cat head P4
+  - [-1, 3, C2f, [512]] # 37 (P4/16-medium)
+
+  - [-1, 1, Conv, [512, 3, 2]] # 38
+  - [[-1, 28], 1, Concat, [1]] # 39: cat head P5
+  - [-1, 3, C2f, [1024]] # 40 (P5/32-large)
+
+  - [[34, 37, 40], 1, Detect, [nc]]  # Detect(P3, P4, P5)

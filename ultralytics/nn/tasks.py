@@ -66,6 +66,7 @@ from ultralytics.nn.modules import (
     SCDown,
     Segment,
     Segment26,
+    SplitChannels,
     TorchVision,
     WorldDetect,
     YOLOEDetect,
@@ -378,6 +379,8 @@ class DetectionModel(BaseModel):
         """
         super().__init__()
         self.yaml = cfg if isinstance(cfg, dict) else yaml_model_load(cfg)  # cfg dict
+        ch = self.yaml.get("ch", ch)  # Dual-stream multimodal patch: load 6 channels if specified
+        
         if self.yaml["backbone"][0][2] == "Silence":
             LOGGER.warning(
                 "YOLOv9 `Silence` module is deprecated in favor of torch.nn.Identity. "
@@ -1714,6 +1717,11 @@ def parse_model(d, ch, verbose=True):
             c2 = args[0]
             c1 = ch[f]
             args = [*args[1:]]
+        elif m is SplitChannels:
+            # args structure from YAML: [c2, start_channel, end_channel]
+            c2 = args[0]
+            c1 = ch[f]
+            args = [c1, c2, *args[1:]]
         else:
             c2 = ch[f]
 

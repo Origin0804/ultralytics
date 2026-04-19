@@ -667,3 +667,15 @@ class Index(nn.Module):
             (torch.Tensor): Selected tensor.
         """
         return x[self.index]
+class SplitChannels(nn.Module):
+    """Split input tensor along channel dimension to extract a sub-tensor.
+    Used for multimodal feature-level fusion networks to separate early stacked channels.
+    """
+    def __init__(self, c1, c2, start, end):
+        super().__init__()
+        self.start = start
+        self.end = end
+
+    def forward(self, x):
+        return x[:, self.start:self.end]
+

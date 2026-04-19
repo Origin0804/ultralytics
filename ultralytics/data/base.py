@@ -233,6 +233,15 @@ class BaseDataset(Dataset):
                     im = imread(f, flags=self.cv2_flag)  # BGR
             else:  # read image
                 im = imread(f, flags=self.cv2_flag)  # BGR
+                # Dual-stream multimodal patch: Attempt to load paired thermal image
+                f_thermal = str(f).replace("images", "images_thermal")
+                im_thermal = imread(f_thermal, flags=self.cv2_flag)
+                if im_thermal is not None:
+                    # Concatenate along channel dimension to create a 6-channel image
+                    im = np.concatenate([im, im_thermal], axis=-1)
+                else:
+                    # Fallback to replicating the RGB image if thermal is missing
+                    im = np.concatenate([im, im], axis=-1)
             if im is None:
                 raise FileNotFoundError(f"Image Not Found {f}")
 
