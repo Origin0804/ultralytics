@@ -203,4 +203,18 @@ calibration_*.npy
 # Training logs
 args.yaml
 results.csv
+
+# Datasets and multimodal tracking data
 RGB-T234/
+datasets/
+
+# Temporary scripts and test files
+test_aug.py
+test_multimodal.py
+train_100_epochs.py
+train_subset.py
+transfer_weights.py
+convert_rgbt2yolo.py
+
+# Presentation files
+for_presentation/
